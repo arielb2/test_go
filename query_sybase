@@ -1,0 +1,33 @@
+package main
+
+import (
+        "database/sql"
+        _ "github.com/thda/tds"
+        "fmt"
+        "bytes"
+)
+
+func main() {
+
+        cnxStr := "tds://user:password@server:port?charset=utf8"
+        var table_name string
+        db, err := sql.Open("tds", cnxStr)
+        if err != nil {
+           fmt.Println(err)
+        }
+
+        qdb := bytes.Buffer{}
+        qdb.WriteString("select convert(varchar(30),o.name) AS table_name")
+        qdb.WriteString(" from master..sysobjects o"
+        qdb.WriteString(" where type = 'U' order by table_name")
+
+        rows, err := db.Query(qdb.String())
+        if err != nil {
+            panic(err)
+        }
+        defer rows.Close()
+        for rows.Next() {
+           rows.Scan(&table_name)
+           fmt.Println(table_name)
+        }
+}
